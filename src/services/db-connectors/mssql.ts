@@ -18,15 +18,29 @@ export type SqlServerConnectorDeps = ServiceDeps;
 
 type InformationSchemaColumn = {
 	COLUMN_NAME: string,
-	COLUMN_TYPE: InformationSchemaColumnType,
+	DATA_TYPE: InformationSchemaColumnType,
 	IS_NULLABLE: boolean
 };
 
 type InformationSchemaColumnType =
+	| 'datetime'
+	| 'decimal'
+	| 'float'
+	| 'int'
+	| 'money'
+	| 'numeric'
+	| 'time'
 	| 'varchar'
 
 const TYPE_MAPPING: { [K in InformationSchemaColumnType]: ColumnType } = {
-	varchar: 'string'
+	datetime: 'Date',
+	decimal: 'number',
+	float: 'number',
+	int: 'number',
+	money: 'number',
+	numeric: 'number',
+	time: 'Date',
+	varchar: 'string',
 };
 
 export async function createSqlServerConnector(
@@ -37,28 +51,36 @@ export async function createSqlServerConnector(
 		server: config.dbHost,
 		port: config.dbPort,
 		database: config.dbName,
-		user: config.dbUser,
-		password: config.dbPass
+		authentication: {
+			options: {
+				userName: config.dbUser,
+				password: config.dbPass
+			}
+		},
+		options: {
+			trustServerCertificate: true
+		}
 	} satisfies mssql.config);
 
 	return {
-		async getColumnsOfTable(table) {
+		async getColumnsOfTable(table, schema) {
 			const request = client.request();
 			const response = await request.query<InformationSchemaColumn>`
 				SELECT
 					COLUMN_NAME,
-					COLUMN_TYPE,
+					DATA_TYPE,
 					IS_NULLABLE
 				FROM
-					InformationSchema.Columns
+					INFORMATION_SCHEMA.COLUMNS
 				WHERE
 					TABLE_NAME = ${table}
+					AND ${schema ?? null} IS NULL OR TABLE_SCHEMA = ${schema ?? null}
 			`;
 
 			return response.recordset.map<ColumnDefintion>(x => {
-				const type = TYPE_MAPPING[x.COLUMN_TYPE];
+				const type = TYPE_MAPPING[x.DATA_TYPE];
 				if (type === undefined) {
-					throw new Error(`Unknown type "${type}" received from SQL Server`);
+					throw new Error(`Unknown type "${x.DATA_TYPE}" received from SQL Server`);
 				}
 
 				return {
@@ -67,6 +89,9 @@ export async function createSqlServerConnector(
 					isNullable: x.IS_NULLABLE
 				};
 			});
+		},
+		async close() {
+			return client.close();
 		}
 	};
 }

@@ -9,5 +9,9 @@ export type ColumnDefintion = {
 	isNullable: boolean
 };
 
-export type ColumnType = 'string' | 'number' | 'boolean';
+export type ColumnType =
+	| 'string'
+	| 'number'
+	| 'boolean'
+	| 'Date';
 

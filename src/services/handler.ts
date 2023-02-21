@@ -1,4 +1,5 @@
 import process from 'node:process';
+import stream from 'node:stream';
 import { AppConfigSubset } from '../config.js';
 import { TableDefinition } from '../models/definitions.js';
 import { ServiceDeps } from '../services.js';
@@ -20,16 +21,20 @@ export function createHandler(config: HandlerConfig, deps: HandlerDeps) {
 		modelGenerator
 	} = deps;
 
+	const output: stream.Writable = process.stdout;
+
 	return async (): Promise<void> => {
+		modelGenerator.pipe(output)
 		for (const table of config.tables) {
-			const columns = await dbConnector.getColumnsOfTable(table);
+			const columns = await dbConnector.getColumnsOfTable(table.name, table.schema);
 			const tableDef: TableDefinition = {
-				name: table,
+				name: table.name,
 				columns
 			};
 
-			modelGenerator.pipe(process.stdout)
+			modelGenerator.write(tableDef);
 		}
+		modelGenerator.end();
 	};
 }
 

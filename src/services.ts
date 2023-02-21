@@ -21,8 +21,8 @@ export async function createServices() {
 
 	let dbConnector: DbConnector;
 	dbConnector = await createSqlServerConnector(config, {});
-	const handler = createHandler(config, { dbConnector });
 	const modelGenerator = createModelGenerator(config, {});
+	const handler = createHandler(config, { dbConnector, modelGenerator });
 
 	return {
 		dbConnector,
