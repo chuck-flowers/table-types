@@ -1,6 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "table-types",
+  "author": "Chuck Flowers",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
@@ -11,7 +12,6 @@
     "prepare": "json2ts --no-additionalProperties -i src/schemas/json -o src/models/generated"
   },
   "keywords": [],
-  "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/mssql": "^8.1.2",
@@ -22,5 +22,8 @@
   },
   "dependencies": {
     "mssql": "^9.1.1"
+  },
+  "bin": {
+    "table-types": "./dist/bin.js"
   }
 }

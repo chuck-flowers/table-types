@@ -19,7 +19,7 @@ export type SqlServerConnectorDeps = ServiceDeps;
 type InformationSchemaColumn = {
 	COLUMN_NAME: string,
 	DATA_TYPE: InformationSchemaColumnType,
-	IS_NULLABLE: boolean
+	IS_NULLABLE: 'YES' | 'NO'
 };
 
 type InformationSchemaColumnType =
@@ -65,19 +65,33 @@ export async function createSqlServerConnector(
 	return {
 		async getColumnsOfTable(table, schema) {
 			const request = client.request();
-			const response = await request.query<InformationSchemaColumn>`
-				SELECT
-					COLUMN_NAME,
-					DATA_TYPE,
-					IS_NULLABLE
-				FROM
-					INFORMATION_SCHEMA.COLUMNS
-				WHERE
-					TABLE_NAME = ${table}
-					AND ${schema ?? null} IS NULL OR TABLE_SCHEMA = ${schema ?? null}
-			`;
+			let response: mssql.IResult<InformationSchemaColumn>;
+			if (schema !== undefined) {
+				response = await request.query`
+					SELECT
+						COLUMN_NAME,
+						DATA_TYPE,
+						IS_NULLABLE
+					FROM
+						INFORMATION_SCHEMA.COLUMNS
+					WHERE
+						TABLE_NAME = ${table}
+						AND TABLE_SCHEMA = ${schema ?? null}
+				`;
+			} else {
+				response = await request.query`
+					SELECT
+						COLUMN_NAME,
+						DATA_TYPE,
+						IS_NULLABLE
+					FROM
+						INFORMATION_SCHEMA.COLUMNS
+					WHERE
+						TABLE_NAME = ${table}
+				`;
+			}
 
-			return response.recordset.map<ColumnDefintion>(x => {
+			return response.recordset.map(x => {
 				const type = TYPE_MAPPING[x.DATA_TYPE];
 				if (type === undefined) {
 					throw new Error(`Unknown type "${x.DATA_TYPE}" received from SQL Server`);
@@ -86,8 +100,8 @@ export async function createSqlServerConnector(
 				return {
 					name: x.COLUMN_NAME,
 					type,
-					isNullable: x.IS_NULLABLE
-				};
+					isNullable: x.IS_NULLABLE === 'YES'
+				} satisfies ColumnDefintion;
 			});
 		},
 		async close() {
