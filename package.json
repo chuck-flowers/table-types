@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "table-types",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "prepare": "json2ts --no-additionalProperties -i src/schemas/json -o src/models/generated"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/mssql": "^8.1.2",
+    "@types/mustache": "^4.2.2",
+    "json-schema-to-typescript": "^11.0.4",
+    "typescript": "^4.9.5",
+    "vitest": "^0.28.5"
+  },
+  "dependencies": {
+    "mssql": "^9.1.1",
+    "mustache": "^4.2.0"
+  }
+}

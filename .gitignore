@@ -1,0 +1,9 @@
+# NPM artifacts
+package-lock.json
+node_modules
+
+# Codegen
+/src/models/generated
+
+# TSC Output
+/dist

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "type": "object",
+  "properties": {
+    "dbHost": {
+      "type": "string"
+    },
+    "dbPort": {
+      "type": "integer"
+    },
+    "dbName": {
+      "type": "string"
+    },
+    "dbUser": {
+      "type": "string"
+    },
+    "dbPass": {
+      "type": "string"
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "dbHost",
+    "dbName",
+    "dbUser",
+    "dbPass",
+    "tables"
+  ]
+}
