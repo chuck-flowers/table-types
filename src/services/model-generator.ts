@@ -1,6 +1,7 @@
 import mustache from 'mustache';
 import fs from 'node:fs';
 import path from 'node:path';
+import stream from 'stream';
 import { AppConfigSubset } from '../config.js';
 import { TableDefinition } from '../models/definitions.js';
 import { ServiceDeps } from '../services.js';
@@ -11,7 +12,7 @@ export default ModelGenerator;
 export type ModelGeneratorConfig = AppConfigSubset;
 export type ModelGeneratorDeps = ServiceDeps;
 
-export function createModelGenerator(config: ModelGeneratorConfig, deps: ModelGeneratorDeps) {
+export function createModelGenerator(_config: ModelGeneratorConfig, _deps: ModelGeneratorDeps) {
 	const modUrl = import.meta.url;
 	const templatePath = path.resolve(modUrl, 'templates', 'table.mustache')
 	if (!fs.existsSync(templatePath)) {
@@ -21,10 +22,11 @@ export function createModelGenerator(config: ModelGeneratorConfig, deps: ModelGe
 	const templateBody = fs.readFileSync(templatePath, { encoding: 'utf8' });
 	mustache.parse(templateBody);
 
-	return new TransformStream<TableDefinition, string>({
-		transform: (tableDef, b) => {
-			const tableTs = mustache.render(templateBody, tableDef);
-			b.enqueue(tableTs);
+	return new stream.Transform({
+		objectMode: true,
+		transform(tableDef: TableDefinition, _encoding, callback) {
+			const interfaceString = mustache.render(templateBody, tableDef);
+			callback(undefined, interfaceString);
 		}
 	});
 }

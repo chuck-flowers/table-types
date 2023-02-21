@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { AppConfigSubset } from '../config.js';
 import { TableDefinition } from '../models/definitions.js';
 import { ServiceDeps } from '../services.js';
@@ -10,11 +11,13 @@ export type HandlerConfig = AppConfigSubset<
 >;
 export type HandlerDeps = ServiceDeps<
 	| 'dbConnector'
+	| 'modelGenerator'
 >;
 
 export function createHandler(config: HandlerConfig, deps: HandlerDeps) {
 	const {
-		dbConnector
+		dbConnector,
+		modelGenerator
 	} = deps;
 
 	return async (): Promise<void> => {
@@ -24,6 +27,8 @@ export function createHandler(config: HandlerConfig, deps: HandlerDeps) {
 				name: table,
 				columns
 			};
+
+			modelGenerator.pipe(process.stdout)
 		}
 	};
 }
