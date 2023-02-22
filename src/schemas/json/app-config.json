@@ -1,45 +1,84 @@
 {
-	"$schema": "https://json-schema.org/draft-07/schema",
-	"type": "object",
-	"properties": {
-		"dbHost": {
-			"type": "string"
-		},
-		"dbPort": {
-			"type": "integer"
-		},
-		"dbName": {
-			"type": "string"
-		},
-		"dbUser": {
-			"type": "string"
-		},
-		"dbPass": {
-			"type": "string"
-		},
-		"tables": {
-			"type": "array",
-			"items": {
-				"type": "object",
-				"properties": {
-					"schema": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"name"
-				]
-			}
-		}
-	},
-	"required": [
-		"dbHost",
-		"dbName",
-		"dbUser",
-		"dbPass",
-		"tables"
-	]
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AppConfig",
+  "type": "object",
+  "properties": {
+    "databases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/database"
+      }
+    }
+  },
+  "required": [
+    "databases"
+  ],
+  "definitions": {
+    "database": {
+      "title": "DbConfig",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "user": {
+          "type": "string"
+        },
+        "pass": {
+          "type": "string"
+        },
+        "schemas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/schema"
+          }
+        }
+      },
+      "required": [
+        "host",
+        "port",
+        "name",
+        "user",
+        "pass",
+        "schemas"
+      ]
+    },
+    "schema": {
+      "title": "SchemaConfig",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/table"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "tables"
+      ]
+    },
+    "table": {
+      "title": "TableConfig",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  }
 }

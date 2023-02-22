@@ -19,15 +19,25 @@ export async function getServices() {
 }
 
 export async function createServices(config: AppConfig) {
-	let dbConnector: DbConnector;
-	dbConnector = await createSqlServerConnector(config, {});
+	let dbConnectors: Record<string, DbConnector> = {};
+	for (const db of config.databases) {
+		let dbConnector: DbConnector;
+		dbConnector = await createSqlServerConnector(db, {});
+		dbConnectors[db.name] = dbConnector;
+	}
+
 	const modelGenerator = createModelGenerator(config, {});
-	const handler = createHandler(config, { dbConnector, modelGenerator });
+	const handler = createHandler(config, { dbConnectors, modelGenerator });
 
 	return {
-		dbConnector,
+		dbConnectors,
 		handler,
-		modelGenerator
+		modelGenerator,
+		async close() {
+			for (const dbConn of Object.values(dbConnectors)) {
+				await dbConn.close();
+			}
+		}
 	};
 }
 

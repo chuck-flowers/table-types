@@ -1,19 +1,13 @@
 import mssql from 'mssql';
-import { AppConfigSubset } from '../../config.js';
 import { ColumnDefintion, ColumnType } from '../../models/definitions.js';
+import { DbConfig } from '../../models/generated/app-config.js';
 import { ServiceDeps } from '../../services.js';
 import { DbConnector } from '../db-connectors.js';
 
 type SqlServerConnector = ReturnType<typeof createSqlServerConnector>;
 export default SqlServerConnector;
 
-export type SqlServerConnectorConfig = AppConfigSubset<
-	| 'dbHost'
-	| 'dbPort'
-	| 'dbName'
-	| 'dbUser'
-	| 'dbPass'
->;
+export type SqlServerConnectorConfig = DbConfig;
 export type SqlServerConnectorDeps = ServiceDeps;
 
 type InformationSchemaColumn = {
@@ -48,13 +42,13 @@ export async function createSqlServerConnector(
 	_deps: SqlServerConnectorDeps
 ): Promise<DbConnector> {
 	const client = await mssql.connect({
-		server: config.dbHost,
-		port: config.dbPort,
-		database: config.dbName,
+		server: config.host,
+		port: config.port,
+		database: config.name,
 		authentication: {
 			options: {
-				userName: config.dbUser,
-				password: config.dbPass
+				userName: config.user,
+				password: config.pass
 			}
 		},
 		options: {
@@ -66,30 +60,17 @@ export async function createSqlServerConnector(
 		async getColumnsOfTable(table, schema) {
 			const request = client.request();
 			let response: mssql.IResult<InformationSchemaColumn>;
-			if (schema !== undefined) {
-				response = await request.query`
-					SELECT
-						COLUMN_NAME,
-						DATA_TYPE,
-						IS_NULLABLE
-					FROM
-						INFORMATION_SCHEMA.COLUMNS
-					WHERE
-						TABLE_NAME = ${table}
-						AND TABLE_SCHEMA = ${schema ?? null}
-				`;
-			} else {
-				response = await request.query`
-					SELECT
-						COLUMN_NAME,
-						DATA_TYPE,
-						IS_NULLABLE
-					FROM
-						INFORMATION_SCHEMA.COLUMNS
-					WHERE
-						TABLE_NAME = ${table}
-				`;
-			}
+			response = await request.query`
+				SELECT
+					COLUMN_NAME,
+					DATA_TYPE,
+					IS_NULLABLE
+				FROM
+					INFORMATION_SCHEMA.COLUMNS
+				WHERE
+					TABLE_NAME = ${table}
+					AND TABLE_SCHEMA = ${schema}
+			`;
 
 			return response.recordset.map(x => {
 				const type = TYPE_MAPPING[x.DATA_TYPE];
