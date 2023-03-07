@@ -81,6 +81,13 @@
       "title": "DbConfig",
       "type": "object",
       "properties": {
+        "dialect": {
+          "type": "string",
+          "enum": [
+            "mssql",
+            "pg"
+          ]
+        },
         "host": {
           "type": "string"
         },
@@ -104,6 +111,7 @@
         }
       },
       "required": [
+        "dialect",
         "host",
         "port",
         "name",

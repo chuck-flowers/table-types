@@ -4,6 +4,7 @@ import { DbConnector } from './services/db-connectors.js';
 import SqlServerConnector from './services/db-connectors/mssql.js';
 import Handler from './services/handler.js';
 import ModelGenerator from './services/model-generator.js';
+import PostgresConnector from './services/db-connectors/pg.js';
 
 export type Services = Awaited<ReturnType<typeof createServices>>;
 export type ServiceDeps<T extends keyof Services = never> = Pick<Services, T>;
@@ -22,7 +23,15 @@ export async function createServices(config: AppConfig) {
 	let dbConnectors: Record<string, DbConnector> = {};
 	for (const db of config.databases) {
 		let dbConnector: DbConnector;
-		dbConnector = new SqlServerConnector(db);
+		switch (db.dialect) {
+			case 'mssql':
+				dbConnector = new SqlServerConnector(db);
+				break;
+			case 'pg':
+				dbConnector = new PostgresConnector(db);
+				break;
+		}
+
 		dbConnectors[db.name] = dbConnector;
 	}
 
@@ -33,6 +42,7 @@ export async function createServices(config: AppConfig) {
 		dbConnectors,
 		handler,
 		modelGenerator,
+
 		async close() {
 			for (const dbConn of Object.values(dbConnectors)) {
 				await dbConn.close();
