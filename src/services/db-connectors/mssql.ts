@@ -17,17 +17,22 @@ type InformationSchemaColumn = {
 };
 
 type InformationSchemaColumnType =
+	| 'char'
 	| 'datetime'
+	| 'datetime2'
 	| 'decimal'
 	| 'float'
 	| 'int'
 	| 'money'
 	| 'numeric'
+	| 'nvarchar'
 	| 'time'
 	| 'varchar'
 
-const TYPE_MAPPING: { [K in InformationSchemaColumnType]: ColumnType } = {
+const TYPE_MAPPING: Record<InformationSchemaColumnType, ColumnType> = {
+	char: 'string',
 	datetime: 'Date',
+	datetime2: 'Date',
 	decimal: 'number',
 	float: 'number',
 	int: 'number',
@@ -35,6 +40,7 @@ const TYPE_MAPPING: { [K in InformationSchemaColumnType]: ColumnType } = {
 	numeric: 'number',
 	time: 'Date',
 	varchar: 'string',
+	nvarchar: 'string'
 };
 
 export async function createSqlServerConnector(
