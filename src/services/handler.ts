@@ -21,6 +21,7 @@ export function createHandler(config: AppConfig, deps: HandlerDeps) {
 	const output: stream.Writable = process.stdout;
 
 	return async (): Promise<void> => {
+		output.write('/* eslint-disable */\n');
 		modelGenerator.pipe(output)
 		for (const db of config.databases) {
 			const dbConnector = dbConnectors[db.name];
