@@ -18,6 +18,7 @@ type InformationSchemaColumn = {
 
 type InformationSchemaColumnType =
 	| 'char'
+	| 'date'
 	| 'datetime'
 	| 'datetime2'
 	| 'decimal'
@@ -31,6 +32,7 @@ type InformationSchemaColumnType =
 
 const TYPE_MAPPING: Record<InformationSchemaColumnType, ColumnType> = {
 	char: 'string',
+	date: 'Date',
 	datetime: 'Date',
 	datetime2: 'Date',
 	decimal: 'number',
