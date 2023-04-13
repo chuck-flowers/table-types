@@ -89,6 +89,7 @@ export async function createSqlServerConnector(
 				return {
 					name: x.COLUMN_NAME,
 					type,
+					rawType: x.DATA_TYPE,
 					isNullable: x.IS_NULLABLE === 'YES'
 				} satisfies ColumnDefintion;
 			});

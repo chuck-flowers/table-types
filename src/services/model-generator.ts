@@ -16,9 +16,9 @@ export function createModelGenerator(_config: ModelGeneratorConfig, _deps: Model
 			let interfaceString = `export interface ${tableDef.name} {\n`;
 			for (const column of tableDef.columns) {
 				if (column.isNullable) {
-					interfaceString += `  ${column.name}: ${column.type} | null;\n`;
+					interfaceString += `  ${column.name}: ${column.type} | null; // ${column.rawType}\n`;
 				} else {
-					interfaceString += `  ${column.name}: ${column.type};\n`;
+					interfaceString += `  ${column.name}: ${column.type}; // ${column.rawType}\n`;
 				}
 			}
 			interfaceString += '};\n';

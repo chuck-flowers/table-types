@@ -6,6 +6,7 @@ export type TableDefinition = {
 export type ColumnDefintion = {
 	name: string,
 	type: ColumnType,
+	rawType: string,
 	isNullable: boolean
 };
 
