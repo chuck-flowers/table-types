@@ -2,13 +2,15 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "table-types",
   "author": "Chuck Flowers",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "build": "tsc",
-    "prepare": "json2ts --no-additionalProperties -i src/schemas/json -o src/models/generated"
+    "build": "npm run codegen && npm run compile",
+    "codegen": "json2ts --no-additionalProperties -i src/schemas/json -o src/models/generated",
+    "compile": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [],
   "license": "ISC",

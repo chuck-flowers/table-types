@@ -1,6 +1,6 @@
 import mssql from 'mssql';
-import { ColumnDefintion, ColumnType } from '../../models/definitions.js';
-import { DbConfig } from '../../models/generated/app-config.js';
+import { ColumnDefintion } from '../../models/definitions.js';
+import { ColumnType, DbConfig } from '../../models/generated/app-config.js';
 import { ServiceDeps } from '../../services.js';
 import { DbConnector } from '../db-connectors.js';
 
@@ -65,7 +65,7 @@ export async function createSqlServerConnector(
 	} satisfies mssql.config);
 
 	return {
-		async getColumnsOfTable(table, schema) {
+		async getColumnsOfTable(schema, table) {
 			const request = client.request();
 			let response: mssql.IResult<InformationSchemaColumn>;
 			response = await request.query`
@@ -76,12 +76,25 @@ export async function createSqlServerConnector(
 				FROM
 					INFORMATION_SCHEMA.COLUMNS
 				WHERE
-					TABLE_NAME = ${table}
-					AND TABLE_SCHEMA = ${schema}
+					TABLE_NAME = ${table.name}
+					AND TABLE_SCHEMA = ${schema.name}
 			`;
 
-			return response.recordset.map(x => {
-				const type = TYPE_MAPPING[x.DATA_TYPE];
+			return response.recordset.map((x): ColumnDefintion | null => {
+				const columnOverride = table.overrides?.[x.COLUMN_NAME];
+
+				// If the column should be ignored, don't generate a definition
+				if (columnOverride !== undefined && 'ignore' in columnOverride && columnOverride.ignore === true) {
+					return null;
+				}
+
+				let type: ColumnType;
+				if (columnOverride !== undefined && 'type' in columnOverride) {
+					type = columnOverride.type;
+				} else {
+					type = TYPE_MAPPING[x.DATA_TYPE];
+				}
+
 				if (type === undefined) {
 					throw new Error(`Unknown type "${x.DATA_TYPE}" received from SQL Server`);
 				}
@@ -92,7 +105,7 @@ export async function createSqlServerConnector(
 					rawType: x.DATA_TYPE,
 					isNullable: x.IS_NULLABLE === 'YES'
 				} satisfies ColumnDefintion;
-			});
+			}).filter((x): x is ColumnDefintion => x !== null);
 		},
 		async close() {
 			return client.close();

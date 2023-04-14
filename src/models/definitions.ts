@@ -1,3 +1,5 @@
+import { ColumnType } from './generated/app-config';
+
 export type TableDefinition = {
 	name: string,
 	columns: ColumnDefintion[]
@@ -9,10 +11,4 @@ export type ColumnDefintion = {
 	rawType: string,
 	isNullable: boolean
 };
-
-export type ColumnType =
-	| 'string'
-	| 'number'
-	| 'boolean'
-	| 'Date';
 

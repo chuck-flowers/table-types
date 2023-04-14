@@ -14,6 +14,53 @@
     "databases"
   ],
   "definitions": {
+    "columnOverride": {
+      "title": "ColumnOverride",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/columnOverrideIgnore"
+        },
+        {
+          "$ref": "#/definitions/columnOverrideType"
+        }
+      ]
+    },
+    "columnOverrideIgnore": {
+      "title": "ColumnOverrideIgnore",
+      "type": "object",
+      "properties": {
+        "ignore": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "ignore"
+      ],
+      "additionalProperties": false
+    },
+    "columnOverrideType": {
+      "title": "ColumnOverrideType",
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/columnType"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "columnType": {
+      "title": "ColumnType",
+      "type": "string",
+      "enum": [
+        "boolean",
+        "Date",
+        "number",
+        "string"
+      ]
+    },
     "database": {
       "title": "DbConfig",
       "type": "object",
@@ -74,6 +121,12 @@
       "properties": {
         "name": {
           "type": "string"
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/columnOverride"
+          }
         }
       },
       "required": [

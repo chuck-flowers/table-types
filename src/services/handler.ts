@@ -27,7 +27,7 @@ export function createHandler(config: AppConfig, deps: HandlerDeps) {
 			const dbConnector = dbConnectors[db.name];
 			for (const schema of db.schemas) {
 				for (const table of schema.tables) {
-					const columns = await dbConnector.getColumnsOfTable(table.name, schema.name);
+					const columns = await dbConnector.getColumnsOfTable(schema, table);
 					const tableDef: TableDefinition = {
 						name: table.name,
 						columns
