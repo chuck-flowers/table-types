@@ -2,29 +2,27 @@ import process from 'node:process';
 import stream from 'node:stream';
 import { TableDefinition } from '../models/definitions.js';
 import { AppConfig } from '../models/generated/app-config.js';
-import { ServiceDeps } from '../services.js';
+import { DbConnector } from './db-connectors.js';
+import ModelGenerator from './model-generator.js';
 
-type Handler = ReturnType<typeof createHandler>;
-export default Handler;
+export default class Handler {
+	private output: stream.Writable;
 
-export type HandlerDeps = ServiceDeps<
-	| 'dbConnectors'
-	| 'modelGenerator'
->;
+	constructor(
+		private config: AppConfig,
+		private dbConnectors: Record<string, DbConnector>,
+		private modelGenerator: ModelGenerator
+	) {
+		this.output = process.stdout;
+	}
 
-export function createHandler(config: AppConfig, deps: HandlerDeps) {
-	const {
-		dbConnectors,
-		modelGenerator
-	} = deps;
+	async execute() {
 
-	const output: stream.Writable = process.stdout;
+		this.output.write('/* eslint-disable */\n');
+		this.modelGenerator.pipe(this.output)
 
-	return async (): Promise<void> => {
-		output.write('/* eslint-disable */\n');
-		modelGenerator.pipe(output)
-		for (const db of config.databases) {
-			const dbConnector = dbConnectors[db.name];
+		for (const db of this.config.databases) {
+			const dbConnector = this.dbConnectors[db.name];
 			for (const schema of db.schemas) {
 				for (const table of schema.tables) {
 					const columns = await dbConnector.getColumnsOfTable(schema, table);
@@ -33,11 +31,12 @@ export function createHandler(config: AppConfig, deps: HandlerDeps) {
 						columns
 					};
 
-					modelGenerator.write(tableDef);
+					this.modelGenerator.write(tableDef);
 				}
 			}
 		}
-		modelGenerator.end();
-	};
+
+		this.modelGenerator.end();
+	}
 }
 

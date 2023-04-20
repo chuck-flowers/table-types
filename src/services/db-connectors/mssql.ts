@@ -1,14 +1,7 @@
 import mssql from 'mssql';
 import { ColumnDefintion } from '../../models/definitions.js';
-import { ColumnType, DbConfig } from '../../models/generated/app-config.js';
-import { ServiceDeps } from '../../services.js';
+import { ColumnType, DbConfig, SchemaConfig, TableConfig } from '../../models/generated/app-config.js';
 import { DbConnector } from '../db-connectors.js';
-
-type SqlServerConnector = ReturnType<typeof createSqlServerConnector>;
-export default SqlServerConnector;
-
-export type SqlServerConnectorConfig = DbConfig;
-export type SqlServerConnectorDeps = ServiceDeps;
 
 type InformationSchemaColumn = {
 	COLUMN_NAME: string,
@@ -45,30 +38,32 @@ const TYPE_MAPPING: Record<InformationSchemaColumnType, ColumnType> = {
 	nvarchar: 'string'
 };
 
-export async function createSqlServerConnector(
-	config: SqlServerConnectorConfig,
-	_deps: SqlServerConnectorDeps
-): Promise<DbConnector> {
-	const client = await mssql.connect({
-		server: config.host,
-		port: config.port,
-		database: config.name,
-		authentication: {
-			options: {
-				userName: config.user,
-				password: config.pass
-			}
-		},
-		options: {
-			trustServerCertificate: true
-		}
-	} satisfies mssql.config);
+export default class SqlServerConnector implements DbConnector {
+	private pool: mssql.ConnectionPool | null = null;
+	private poolPromise: Promise<mssql.ConnectionPool>;
 
-	return {
-		async getColumnsOfTable(schema, table) {
-			const request = client.request();
-			let response: mssql.IResult<InformationSchemaColumn>;
-			response = await request.query`
+	constructor(config: DbConfig) {
+		this.poolPromise = mssql.connect({
+			server: config.host,
+			port: config.port,
+			database: config.name,
+			authentication: {
+				options: {
+					userName: config.user,
+					password: config.pass
+				}
+			},
+			options: {
+				trustServerCertificate: true
+			}
+		} satisfies mssql.config).then(client => this.pool = client);
+	}
+
+	async getColumnsOfTable(schema: SchemaConfig, table: TableConfig): Promise<ColumnDefintion[]> {
+		const pool = await this.getPool();
+		const request = pool.request();
+		let response: mssql.IResult<InformationSchemaColumn>;
+		response = await request.query`
 				SELECT
 					COLUMN_NAME,
 					DATA_TYPE,
@@ -80,36 +75,45 @@ export async function createSqlServerConnector(
 					AND TABLE_SCHEMA = ${schema.name}
 			`;
 
-			return response.recordset.map((x): ColumnDefintion | null => {
-				const columnOverride = table.overrides?.[x.COLUMN_NAME];
+		return response.recordset.map((x): ColumnDefintion | null => {
+			const columnOverride = table.overrides?.[x.COLUMN_NAME];
 
-				// If the column should be ignored, don't generate a definition
-				if (columnOverride !== undefined && 'ignore' in columnOverride && columnOverride.ignore === true) {
-					return null;
-				}
+			// If the column should be ignored, don't generate a definition
+			if (columnOverride !== undefined && 'ignore' in columnOverride && columnOverride.ignore === true) {
+				return null;
+			}
 
-				let type: ColumnType;
-				if (columnOverride !== undefined && 'type' in columnOverride) {
-					type = columnOverride.type;
-				} else {
-					type = TYPE_MAPPING[x.DATA_TYPE];
-				}
+			let type: ColumnType;
+			if (columnOverride !== undefined && 'type' in columnOverride) {
+				type = columnOverride.type;
+			} else {
+				type = TYPE_MAPPING[x.DATA_TYPE];
+			}
 
-				if (type === undefined) {
-					throw new Error(`Unknown type "${x.DATA_TYPE}" received from SQL Server`);
-				}
+			if (type === undefined) {
+				throw new Error(`Unknown type "${x.DATA_TYPE}" received from SQL Server`);
+			}
 
-				return {
-					name: x.COLUMN_NAME,
-					type,
-					rawType: x.DATA_TYPE,
-					isNullable: x.IS_NULLABLE === 'YES'
-				} satisfies ColumnDefintion;
-			}).filter((x): x is ColumnDefintion => x !== null);
-		},
-		async close() {
-			return client.close();
+			return {
+				name: x.COLUMN_NAME,
+				type,
+				rawType: x.DATA_TYPE,
+				isNullable: x.IS_NULLABLE === 'YES'
+			} satisfies ColumnDefintion;
+		}).filter((x): x is ColumnDefintion => x !== null);
+	}
+
+	async close(): Promise<void> {
+		const pool = await this.getPool();
+		return pool.close();
+	}
+
+	private async getPool(): Promise<mssql.ConnectionPool> {
+		if (this.pool === null) {
+			await this.poolPromise;
 		}
-	};
+
+		return this.pool!;
+	}
 }
 
