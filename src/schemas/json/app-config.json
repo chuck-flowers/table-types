@@ -21,6 +21,9 @@
           "$ref": "#/definitions/columnOverrideIgnore"
         },
         {
+          "$ref": "#/definitions/columnOverrideNullable"
+        },
+        {
           "$ref": "#/definitions/columnOverrideType"
         }
       ]
@@ -35,6 +38,19 @@
       },
       "required": [
         "ignore"
+      ],
+      "additionalProperties": false
+    },
+    "columnOverrideNullable": {
+      "title": "ColumnOverrideNullable",
+      "type": "object",
+      "properties": {
+        "nullable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "nullable"
       ],
       "additionalProperties": false
     },

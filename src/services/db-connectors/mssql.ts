@@ -76,19 +76,8 @@ export default class SqlServerConnector implements DbConnector {
 			`;
 
 		return response.recordset.map((x): ColumnDefintion | null => {
-			const columnOverride = table.overrides?.[x.COLUMN_NAME];
-
-			// If the column should be ignored, don't generate a definition
-			if (columnOverride !== undefined && 'ignore' in columnOverride && columnOverride.ignore === true) {
-				return null;
-			}
-
 			let type: ColumnType;
-			if (columnOverride !== undefined && 'type' in columnOverride) {
-				type = columnOverride.type;
-			} else {
-				type = TYPE_MAPPING[x.DATA_TYPE];
-			}
+			type = TYPE_MAPPING[x.DATA_TYPE];
 
 			if (type === undefined) {
 				throw new Error(`Unknown type "${x.DATA_TYPE}" received from SQL Server`);

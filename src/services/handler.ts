@@ -25,7 +25,33 @@ export default class Handler {
 			const dbConnector = this.dbConnectors[db.name];
 			for (const schema of db.schemas) {
 				for (const table of schema.tables) {
-					const columns = await dbConnector.getColumnsOfTable(schema, table);
+					let columns = await dbConnector.getColumnsOfTable(schema, table);
+
+					// Determine if some column overrides need to be applied
+					const colOverrides = table.overrides;
+					if (colOverrides !== undefined) {
+						columns = columns.filter(column => {
+							const override = colOverrides[column.name];
+
+							// Ignore the column if it has been blacklisted
+							if ('ignore' in override) {
+								return !override.ignore;
+							}
+
+							// Override nullability if configured
+							if ('nullable' in override) {
+								column.isNullable = override.nullable;
+							}
+
+							// Override the type if configured
+							if ('type' in override) {
+								column.type = override.type;
+							}
+
+							return true;
+						});
+					}
+
 					const tableDef: TableDefinition = {
 						name: table.name,
 						columns
