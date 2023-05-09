@@ -33,6 +33,11 @@ export default class Handler {
 						columns = columns.filter(column => {
 							const override = colOverrides[column.name];
 
+							// If no override is specified, generate this column as normal
+							if (override === undefined) {
+								return true;
+							}
+
 							// Ignore the column if it has been blacklisted
 							if ('ignore' in override) {
 								return !override.ignore;
