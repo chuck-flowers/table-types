@@ -43,11 +43,10 @@ const TYPE_MAPPING: Record<InformationSchemaColumnType, ColumnType> = {
 };
 
 export default class SqlServerConnector implements DbConnector {
-	private pool: mssql.ConnectionPool | null = null;
-	private poolPromise: Promise<mssql.ConnectionPool>;
+	private pool: mssql.ConnectionPool;
 
 	constructor(config: DbConfig) {
-		this.poolPromise = mssql.connect({
+		this.pool = new mssql.ConnectionPool({
 			server: config.host,
 			port: config.port,
 			database: config.name,
@@ -60,26 +59,25 @@ export default class SqlServerConnector implements DbConnector {
 			options: {
 				trustServerCertificate: true
 			}
-		} satisfies mssql.config).then(client => this.pool = client);
+		} satisfies mssql.config);
 	}
 
 	async getColumnsOfTable(schema: SchemaConfig, table: TableConfig): Promise<ColumnDefintion[]> {
 		const pool = await this.getPool();
 		const request = pool.request();
-		let response: mssql.IResult<InformationSchemaColumn>;
-		response = await request.query`
-				SELECT
-					COLUMN_NAME,
-					DATA_TYPE,
-					IS_NULLABLE
-				FROM
-					INFORMATION_SCHEMA.COLUMNS
-				WHERE
-					TABLE_NAME = ${table.name}
-					AND TABLE_SCHEMA = ${schema.name}
-			`;
+		const { recordset: dbColumns } = await request.query<InformationSchemaColumn>`
+			SELECT
+				COLUMN_NAME,
+				DATA_TYPE,
+				IS_NULLABLE
+			FROM
+				INFORMATION_SCHEMA.COLUMNS
+			WHERE
+				TABLE_NAME = ${table.name}
+				AND TABLE_SCHEMA = ${schema.name}
+		`;
 
-		return response.recordset.map((x): ColumnDefintion | null => {
+		return dbColumns.map((x): ColumnDefintion | null => {
 			let type: ColumnType;
 			type = TYPE_MAPPING[x.DATA_TYPE];
 
@@ -102,11 +100,11 @@ export default class SqlServerConnector implements DbConnector {
 	}
 
 	private async getPool(): Promise<mssql.ConnectionPool> {
-		if (this.pool === null) {
-			await this.poolPromise;
+		if (!this.pool.connected) {
+			await this.pool.connect();
 		}
 
-		return this.pool!;
+		return this.pool;
 	}
 }
 
