@@ -10,6 +10,7 @@ type InformationSchemaColumn = {
 };
 
 type InformationSchemaColumnType =
+	| 'bit'
 	| 'char'
 	| 'date'
 	| 'datetime'
@@ -20,10 +21,12 @@ type InformationSchemaColumnType =
 	| 'money'
 	| 'numeric'
 	| 'nvarchar'
+	| 'smallint'
 	| 'time'
 	| 'varchar'
 
 const TYPE_MAPPING: Record<InformationSchemaColumnType, ColumnType> = {
+	bit: 'boolean',
 	char: 'string',
 	date: 'Date',
 	datetime: 'Date',
@@ -33,6 +36,7 @@ const TYPE_MAPPING: Record<InformationSchemaColumnType, ColumnType> = {
 	int: 'number',
 	money: 'number',
 	numeric: 'number',
+	smallint: 'number',
 	time: 'Date',
 	varchar: 'string',
 	nvarchar: 'string'
