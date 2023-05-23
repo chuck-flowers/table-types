@@ -22,6 +22,7 @@ type InformationSchemaColumnType =
 	| 'numeric'
 	| 'nvarchar'
 	| 'smallint'
+	| 'text'
 	| 'time'
 	| 'varchar'
 
@@ -37,6 +38,7 @@ const TYPE_MAPPING: Record<InformationSchemaColumnType, ColumnType> = {
 	money: 'number',
 	numeric: 'number',
 	smallint: 'number',
+	text: 'string',
 	time: 'Date',
 	varchar: 'string',
 	nvarchar: 'string'
