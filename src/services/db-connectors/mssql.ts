@@ -10,6 +10,7 @@ type InformationSchemaColumn = {
 };
 
 type InformationSchemaColumnType =
+	| 'bigint'
 	| 'bit'
 	| 'char'
 	| 'date'
@@ -28,6 +29,7 @@ type InformationSchemaColumnType =
 	| 'varchar'
 
 const TYPE_MAPPING: Record<InformationSchemaColumnType, ColumnType> = {
+	bigint: 'number',
 	bit: 'boolean',
 	char: 'string',
 	date: 'Date',
