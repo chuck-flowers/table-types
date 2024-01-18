@@ -25,6 +25,7 @@ type InformationSchemaColumnType =
 	| 'smallint'
 	| 'text'
 	| 'time'
+	| 'tinyint'
 	| 'uniqueidentifier'
 	| 'varchar'
 
@@ -43,6 +44,7 @@ const TYPE_MAPPING: Record<InformationSchemaColumnType, ColumnType> = {
 	smallint: 'number',
 	text: 'string',
 	time: 'Date',
+	tinyint: 'number',
 	uniqueidentifier: 'string',
 	varchar: 'string',
 	nvarchar: 'string'
